@@ -139,6 +139,8 @@ def from_http(**kwargs):
         raise e
 
 def from_incra(**kwargs):
+    from bs4 import BeautifulSoup
+
     def build_datasets(s3_params, source_name, dataset):
         content_type = s3_params['file_name'].split('.')[-1]
         aditional_path = ''
@@ -153,7 +155,6 @@ def from_incra(**kwargs):
         }]
 
     def resolve_url(incra_params):
-        from bs4 import BeautifulSoup
         try:
             page = requests.post(f"{kwargs['base_url']}/{kwargs['form_resource']}", incra_params, verify=False)   
             if page.status_code != 200: raise CustomError(f"Connection error: {page.status_code}") 
