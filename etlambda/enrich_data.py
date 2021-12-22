@@ -1,5 +1,6 @@
 import boto3
 from sqlalchemy import create_engine, text as sqlalchemy_text
+from sqlalchemy.pool import NullPool
 
 def execute_sql_script(db_uri, input_text=None, input_file=None, bucket_name=None):
     try:
@@ -8,7 +9,7 @@ def execute_sql_script(db_uri, input_text=None, input_file=None, bucket_name=Non
         if input_file and not bucket_name:
             raise ValueError("Parameter error: 'input_file' requires 'bucket_name'")
 
-        engine = create_engine(db_uri, connect_args={'connect_timeout': 45})
+        engine = create_engine(db_uri, poolclass=NullPool, connect_args={'connect_timeout': 45})
         result = None
         script = ''
 
