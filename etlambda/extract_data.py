@@ -211,9 +211,7 @@ def from_sicar(**kwargs):
             img.save('/tmp/captcha.png')
             
             solver = TwoCaptcha(twocaptcha_token)
-            result = solver.normal('/tmp/captcha.png')
-            
-            print(result['code'])
+            result = solver.normal('/tmp/captcha.png')            
             
             return result['code']
         except Exception as e:
@@ -240,16 +238,22 @@ def from_sicar(**kwargs):
     try:
         sicar_params = kwargs["sicar_params"]
         file_name = f"{sicar_params['geocodigo']}.zip"
+        http_params = {
+           "verify": False
+        }
+        if "http_params" in kwargs:
+            http_params = kwargs["http_params"]
+                    
         s3_params = {}
         
-        session = open_session(kwargs['base_url'])
+        session = open_session(kwargs['base_url'], http_params['verify'])
 
         captcha = resolve_captcha(session, kwargs['twocaptcha_token'], kwargs['captcha_url'])
 
         http_params = { 
+            **http_params,
             "url": kwargs['shape_url'],
             "timeout" : 180,
-            "verify": False,
             "query": { 
                 "municipio[id]": sicar_params["geocodigo"],
                 "email": sicar_params["email"],
@@ -357,7 +361,6 @@ def to_s3(source_name, dataset, content_type, bucket_name, http_params, session=
         get = session.get if session else requests.get    
         response = get(url, stream=True, verify=http_params['verify'], timeout=http_params['timeout'])
         if response.status_code != 200: raise CustomError(f"Connection error: {response.status_code}") 
-
         file_name = resolve_filename(response.headers, source_name, dataset, content_type, file_name)
  
         s3_client = boto3.client('s3')
@@ -368,9 +371,9 @@ def to_s3(source_name, dataset, content_type, bucket_name, http_params, session=
     except Exception as e:
         raise e
 
-def open_session(url):
+def open_session(url, verify= False):
     session = requests.Session()
-    session.get(url)
+    session.get(url,  verify= verify)
     return session
 
 def resolve_filename(headers, source_name, dataset, content_type, file_name=None):
